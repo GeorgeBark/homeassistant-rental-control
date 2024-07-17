@@ -603,9 +603,9 @@ class RentalControl:
             # RRULEs should not exist in AirBnB bookings, so log and error and
             # skip
             if "RRULE" in event:
-                _LOGGER.error("RRULE in event: %s", str(event["SUMMARY"]))
+                _LOGGER.error("RRULE in event: %s", str(event.get("SUMMARY","")))
 
-            elif "Check-in" in event["SUMMARY"] or "Check-out" in event["SUMMARY"]:
+            elif "Check-in" in event.get("SUMMARY","") or "Check-out" in event.get("SUMMARY",""):
                 _LOGGER.debug("Smoobu extra event, ignoring")
 
             else:
@@ -633,17 +633,17 @@ class RentalControl:
                     isinstance(self.ignore_non_reserved, type(None))
                     or self.ignore_non_reserved
                 ):
-                    if any(x in event["SUMMARY"] for x in ["Blocked", "Not available"]):
+                    if any(x in event.get("SUMMARY","") for x in ["Blocked", "Not available"]):
                         # Skip Blocked or 'Not available' events
                         continue
 
                 if "DESCRIPTION" in event:
                     slot_name = get_slot_name(
-                        event["SUMMARY"], event["DESCRIPTION"], ""
+                        event.get("SUMMARY",""), event["DESCRIPTION"], ""
                     )
                 else:
                     # VRBO and Booking.com do not have a DESCRIPTION element
-                    slot_name = get_slot_name(event["SUMMARY"], "", "")
+                    slot_name = get_slot_name(event.get("SUMMARY",""), "", "")
 
                 override = None
                 if slot_name and self.event_overrides:
@@ -676,7 +676,7 @@ class RentalControl:
 
                 # Modify the SUMMARY if we have an event_prefix
                 if self.event_prefix:
-                    event["SUMMARY"] = self.event_prefix + " " + event["SUMMARY"]
+                    event["SUMMARY"] = self.event_prefix + " " + event.get("SUMMARY","")
 
                 cal_event = await self._ical_event(start, end, from_date, event)
                 if cal_event:
